@@ -11,16 +11,14 @@ from flask_login import login_user, current_user, logout_user, login_required
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
     posts = []
     if request.method == 'GET':
-        posts = Post.query.order_by(Post.id.desc()).limit(10)
+        posts = Post.query.order_by(Post.id.desc()).limit(app.config['PER_PAGE'])
         return render_template('index.html', posts=posts)
     else:
         last_post_id = request.form.get('last_post_id')
         post_schema = PostSchema(many=True)
-        posts = Post.query.filter(Post.id < last_post_id).order_by(Post.id.desc()).limit(10)
+        posts = Post.query.filter(Post.id < last_post_id).order_by(Post.id.desc()).limit(app.config['PER_PAGE'])
         return jsonify(post_schema.dump(posts))
 
 
@@ -99,9 +97,25 @@ def profile():
     return render_template('profile.html', title='Profile', image=image, form=form)
 
 
-@app.route('/post/new', methods=['GET', 'POST'])
+@app.route('/post/<int:post_id>')
+def get_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    return render_template('post_view.html', title=post.title, post=post)
+
+
+@app.route('/user/<username>')
+def get_user_posts(username):
+    page = request.args.get('page', 1, type=int)
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(author=user).order_by(Post.id.desc()).paginate(page=page,
+                                                                                per_page=app.config[
+                                                                                    'PER_PAGE'])
+    return render_template('posts.html', title=user.username + "'s Posts", posts=posts, user=user)
+
+
+@app.route('/post/create', methods=['GET', 'POST'])
 @login_required
-def new_post():
+def create_post():
     form = PostForm()
     if form.validate_on_submit():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
@@ -110,12 +124,6 @@ def new_post():
         flash('Your post has been created!', 'success')
         return redirect(url_for('index'))
     return render_template('post_form.html', title='New Post', legend='New Post', form=form)
-
-
-@app.route('/post/<int:post_id>')
-def get_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    return render_template('post_view.html', title=post.title, post=post)
 
 
 @app.route('/post/<int:post_id>/update', methods=['GET', 'POST'])
