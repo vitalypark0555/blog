@@ -2,17 +2,26 @@ import os
 import secrets
 from PIL import Image
 from flask import flash, redirect, url_for, request, abort
-from flask import render_template
+from flask import render_template, jsonify
 from app.forms import RegistrationForm, LoginForm, UpdateProfileForm, PostForm
 from app import app, db, bcrypt
-from app.models import User, Post
+from app.models import User, Post, PostSchema
 from flask_login import login_user, current_user, logout_user, login_required
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    posts = Post.query.all()
-    return render_template('index.html', posts=posts)
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    posts = []
+    if request.method == 'GET':
+        posts = Post.query.order_by(Post.id.desc()).limit(10)
+        return render_template('index.html', posts=posts)
+    else:
+        last_post_id = request.form.get('last_post_id')
+        post_schema = PostSchema(many=True)
+        posts = Post.query.filter(Post.id < last_post_id).order_by(Post.id.desc()).limit(10)
+        return jsonify(post_schema.dump(posts))
 
 
 @app.route('/about')
@@ -53,7 +62,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 
 def save_image(form_image):

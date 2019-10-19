@@ -1,3 +1,4 @@
+marshmallow==3.2.1
 bcrypt==3.1.7
 cffi==1.13.0
 Click==7.0

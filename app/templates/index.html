@@ -1,19 +1,60 @@
 {% extends 'layout.html' %}
 {% block content %}
-    {% for post in posts %}
-        <article class="media content-section">
-            <div class="media-body">
-                <div class="article-metadata">
-                    <img class="rounded-circle article-svg"
-                         src="{{ url_for('static',filename='profile_images/' + post.author.image) }}" alt="image">
-                    <a class="mr-2" href="#">{{ post.author.username }}</a>
-                    <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
+    <div id="posts">
+        {% for post in posts %}
+            <article class="media content-section" id="{{ post.id }}">
+                <div class="media-body">
+                    <div class="article-metadata">
+                        <img class="rounded-circle article-svg"
+                             src="{{ url_for('static',filename='profile_images/' + post.author.image) }}" alt="image">
+                        <a class="mr-2" href="#">{{ post.author.username }}</a>
+                        <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
 
+                    </div>
+                    <h2><a class="article-title" href="{{ url_for('get_post', post_id=post.id) }}">{{ post.title }}</a>
+                    </h2>
+                    <p class="article-content">{{ post.content }}</p>
                 </div>
-                <h2><a class="article-title" href="{{ url_for('get_post', post_id=post.id) }}">{{ post.title }}</a></h2>
-                <p class="article-content">{{ post.content }}</p>
-            </div>
-        </article>
-    {% endfor %}
+            </article>
+        {% endfor %}
+    </div>
 {% endblock %}
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
 
+            $(window).scroll(function () {
+                if ($(window).scrollTop() === $(document).height() - $(window).height()) {
+                    let last_post_id = $('article').last().attr('id');
+                    $.ajax({
+                        type: "POST",
+                        url: "{{url_for('index')}}",
+                        data: {last_post_id: last_post_id},
+                        success: function (data) {
+                            $.each(data, function (i, post) {
+                                $('#posts').append(
+                                    '<article class="media content-section" id="' + post.id + '">' +
+                                    '<div class="media-body">' +
+                                    '<div class="article-metadata">' +
+                                    '<img class="rounded-circle article-svg"' +
+                                    'src="{{ url_for('static',filename='profile_images/') }}' + post.author.image + '" alt="image">' +
+                                    '<a class="mr-2" href="#">' + post.author.username + '</a>' +
+                                    '<small class="text-muted">' + post.created_at + '</small>' +
+
+                                    '</div>' +
+                                    '<h2><a class="article-title" href="/post/' + post.id + '">' + post.title + '</a>' +
+                                    '</h2>' +
+                                    '<p class="article-content">' + post.content + '</p>' +
+                                    '</div>' +
+                                    '</article>'
+                                )
+                            });
+
+                        }
+                    });
+                    return false;
+                }
+            });
+        });
+    </script>
+{% endblock %}
