@@ -9,7 +9,7 @@
                 <small class="text-muted">{{ post.created_at.strftime('%Y-%m-%d') }}</small>
                 {% if post.author == current_user %}
                     <a class="btn btn-info btn-sm1 m-1"
-                       href="{{ url_for('update_post', post_id=post.id) }}">Update</a>
+                       href="{{ url_for('posts.update_post', post_id=post.id) }}">Update</a>
                     <button type="button" class="btn btn-danger btn-sm1" data-toggle="modal" data-target="#deleteModal">
                         Delete
                     </button>
@@ -34,7 +34,7 @@
                     <p>Do you really want to delete this post?</p>
                 </div>
                 <div class="modal-footer">
-                    <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}">
+                    <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}">
                         <input class="btn btn-danger" type="submit" value="Delete">
                     </form>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
