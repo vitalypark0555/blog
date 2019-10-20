@@ -84,3 +84,12 @@ a.article-title:hover {
     position: relative;
     min-height: 50px;
 }
+
+.article-username {
+    padding-left: 10px;
+}
+
+.article-buttons {
+    float: right;
+    padding-top: 5px;
+}
